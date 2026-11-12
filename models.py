@@ -1,24 +1,35 @@
+from datetime import datetime
+from typing import Optional
+
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey, String, Text, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import generate_password_hash, check_password_hash
 
-db = SQLAlchemy()
+
+class Base(DeclarativeBase):
+    pass
+
+
+db = SQLAlchemy(model_class=Base)
+
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False, nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
-    rsvps = db.relationship('RSVP', backref='user', lazy=True)
-    events = db.relationship('Event', backref='creator', lazy=True)
-    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(80), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=func.current_timestamp())
+
+    rsvps: Mapped[list["RSVP"]] = relationship(back_populates="user")
+    events: Mapped[list["Event"]] = relationship(back_populates="creator")
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -27,20 +38,22 @@ class User(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+
 class Event(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    date = db.Column(db.DateTime, nullable=False)
-    location = db.Column(db.String(200), nullable=True)
-    capacity = db.Column(db.Integer, nullable=True)  # None means unlimited
-    is_public = db.Column(db.Boolean, default=True, nullable=False)
-    requires_admin = db.Column(db.Boolean, default=False, nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
-    rsvps = db.relationship('RSVP', backref='event', lazy=True, cascade='all, delete-orphan')
-    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    date: Mapped[datetime]
+    location: Mapped[Optional[str]] = mapped_column(String(200))
+    capacity: Mapped[Optional[int]]  # None means unlimited
+    is_public: Mapped[bool] = mapped_column(default=True)
+    requires_admin: Mapped[bool] = mapped_column(default=False)
+    created_by: Mapped[Optional[int]] = mapped_column(ForeignKey('user.id'))
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=func.current_timestamp())
+
+    creator: Mapped[Optional["User"]] = relationship(back_populates="events")
+    rsvps: Mapped[list["RSVP"]] = relationship(back_populates="event", cascade='all, delete-orphan')
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -57,13 +70,17 @@ class Event(db.Model):
             'attendees': [rsvp.user_id for rsvp in self.rsvps if rsvp.attending and rsvp.user_id is not None]
         }
 
+
 class RSVP(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    attending = db.Column(db.Boolean, default=True, nullable=False)  # True = going, False = not going
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    event_id: Mapped[int] = mapped_column(ForeignKey('event.id'))
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey('user.id'))
+    attending: Mapped[bool] = mapped_column(default=True)  # True = going, False = not going
+    created_at: Mapped[Optional[datetime]] = mapped_column(default=func.current_timestamp())
+
+    event: Mapped["Event"] = relationship(back_populates="rsvps")
+    user: Mapped[Optional["User"]] = relationship(back_populates="rsvps")
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -72,4 +89,3 @@ class RSVP(db.Model):
             'attending': self.attending,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
-

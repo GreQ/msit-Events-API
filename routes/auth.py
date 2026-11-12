@@ -11,14 +11,14 @@ def register():
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({'error': 'Username and password are required'}), 400
     
-    if User.query.filter_by(username=data['username']).first():
+    if db.session.scalar(db.select(User).filter_by(username=data['username'])):
         return jsonify({'error': 'Username already exists'}), 400
-    
+
     user = User(username=data['username'])
     user.set_password(data['password'])
-    
+
     # First user becomes admin (for demo purposes)
-    if User.query.count() == 0:
+    if db.session.scalar(db.select(db.func.count()).select_from(User)) == 0:
         user.is_admin = True
     
     db.session.add(user)
@@ -33,7 +33,7 @@ def login():
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({'error': 'Username and password are required'}), 400
     
-    user = User.query.filter_by(username=data['username']).first()
+    user = db.session.scalar(db.select(User).filter_by(username=data['username']))
     
     if not user or not user.check_password(data['password']):
         return jsonify({'error': 'Invalid credentials'}), 401

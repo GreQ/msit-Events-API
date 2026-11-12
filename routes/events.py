@@ -8,13 +8,13 @@ events_bp = Blueprint('events', __name__, url_prefix='/api/events')
 @events_bp.route('', methods=['GET'])
 def get_events():
     """Get all events that the user can see"""
-    events = Event.query.all()
+    events = db.session.scalars(db.select(Event)).all()
     return jsonify([event.to_dict() for event in events]), 200
 
 @events_bp.route('/<int:event_id>', methods=['GET'])
 def get_event(event_id):
     """Get a specific event"""
-    event = Event.query.get_or_404(event_id)
+    event = db.get_or_404(Event, event_id)
     return jsonify(event.to_dict()), 200
 
 @events_bp.route('', methods=['POST'])
