@@ -1,3 +1,6 @@
+#greq
+gui
+
 # Python
 __pycache__/
 *.py[cod]

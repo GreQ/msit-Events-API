@@ -136,3 +136,30 @@ The application uses SQLite by default. The database file (`events.db`) will be 
 
 **Note**: The first user registered automatically becomes an admin for demo purposes.
 
+
+
+## Running Tests
+
+The tests live in `tests/` and use pytest (already in `requirements.txt`). With the
+virtual environment activated, run from the project root:
+
+```bash
+python -m pytest
+```
+
+Useful options:
+
+```bash
+python -m pytest -v                                   # list every test
+python -m pytest -rx                                  # show why tests marked xfail fail
+python -m pytest tests/test_models.py::TestAuthRoutes # run one test class
+python -m pytest -k rsvp                              # run tests whose name matches "rsvp"
+```
+
+Each test uses a fresh in-memory SQLite database, so your `instance/events.db` is never
+touched and the server doesn't need to be running.
+
+Tests marked `xfail` document known bugs. They show up as `x` in the output and don't
+fail the run. Once a bug is fixed, its test passes and pytest fails the run with `[XPASS(strict)]`.
+That tells you to remove the `xfail` marker.
+
