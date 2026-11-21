@@ -43,6 +43,8 @@ python app.py
 
 The API will be available at `http://localhost:5000`
 
+```
+
 ## Swagger UI Documentation
 
 The API includes interactive Swagger UI documentation. After starting the server:
@@ -162,4 +164,34 @@ touched and the server doesn't need to be running.
 Tests marked `xfail` document known bugs. They show up as `x` in the output and don't
 fail the run. Once a bug is fixed, its test passes and pytest fails the run with `[XPASS(strict)]`.
 That tells you to remove the `xfail` marker.
+
+## Running with Docker
+
+1. Build the image from the project root:
+```bash
+docker build -t evently-api .
+```
+
+2. Run the container:
+```bash
+docker run -d --name evently-api -p 5000:5000 evently-api
+```
+
+The API will be available at `http://localhost:5000` and Swagger UI at `http://localhost:5000/apidocs`.
+
+The image includes a copy of `instance/events.db`, taken at build time. Changes the API makes
+are written to the container's copy, so they're lost when you remove the container and don't
+show up in your local file. To use your local database instead, mount the `instance/` folder:
+
+```bash
+docker run -d --name evently-api -p 5000:5000 -v "${PWD}/instance:/app/instance" evently-api
+```
+
+Useful commands:
+
+```bash
+docker logs -f evently-api   # follow the server output
+docker stop evently-api      # stop the container
+docker start evently-api     # start it again (keeps the container's data)
+docker rm -f evently-api     # remove the container (its data goes with it)
 

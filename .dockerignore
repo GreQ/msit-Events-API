@@ -1,0 +1,14 @@
+# Keep instance/ and *.db: the database ships with the image.
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.vscode
+.idea
+.env
+gui
+Dockerfile
+.dockerignore
