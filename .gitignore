@@ -1,5 +1,6 @@
 #greq
 gui
+.github-compose
 
 # Python
 __pycache__/

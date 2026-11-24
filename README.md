@@ -175,6 +175,7 @@ docker build -t evently-api .
 2. Run the container:
 ```bash
 docker run -d --name evently-api -p 5000:5000 evently-api
+docker run -d --name evently-api -p 5000:5000 --name banana evently-api
 ```
 
 The API will be available at `http://localhost:5000` and Swagger UI at `http://localhost:5000/apidocs`.
