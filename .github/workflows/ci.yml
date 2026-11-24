@@ -1,26 +1,63 @@
 name: CI
-
+#pipeline definieren:
 on:
   push:
-    branches: [main]
-  pull_request:
-
-permissions:
-  contents: read
+    branches: [ main ]
+  #Pull_request:
+    #branches: [ main ]
 
 jobs:
+  #build:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: check checkout (list files)
+        run: ls -al
 
-      - uses: actions/setup-python@v6
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.12" # matches the Dockerfile
-          cache: pip
+          python-version: '3.13'
+
+      - name: setup docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: docker build container
+        ru: |
+          docker build -t msit-events-api:latest .
+
+      - name: docker run container
+        run: |
+          docker run -d -p 5000:5000 --name msit-events-api msit-events-api:latest
+          # wait for the container to start
+          sleep 5
+          
+
+#      - name: setup docker 
+#        uses: addnab/docker-run-action@v3
+#        with:
+#          image: docker:24.0.5
+#          options: --privileged
+#          run: |
+#            docker info
+
+#      - name : Install Docker Compose
+#        run: |
+#          curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+#          chmod +x /usr/local/bin/docker-compose  
 
       - name: Install dependencies
-        run: python -m pip install -r requirements.txt && python -m pip install -r requirements-test.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements.test.txt
 
+      
       - name: Run tests
-        run: python -m pytest
+        run: |
+          pytest
+          curl -f http://localhost:5000/api/health || exit 1
+          echo "API health check passed"
