@@ -195,4 +195,15 @@ docker logs -f evently-api   # follow the server output
 docker stop evently-api      # stop the container
 docker start evently-api     # start it again (keeps the container's data)
 docker rm -f evently-api     # remove the container (its data goes with it)
+```
+
+
+## Publish Docker
+```bash 
+docker login -u greq # Use Personal Access Token (PAT, best practices)
+docker build -t greq/msit-events-api:latest .
+docker tag greq/msit-events-api:latest greq/msit-events-api:1.0.0
+docker push greq/msit-events-api:latest
+```
+
 
